@@ -1,5 +1,7 @@
 const serverless = require('serverless-http');
-const app = require('../../app'); // 👈 This imports your main app.js
+const app = require('../../app'); 
 
-// Wrap the Express app inside serverless-http
-module.exports.handler = serverless(app);
+// This ensures Express strips the Netlify routing prefix completely
+module.exports.handler = serverless(app, {
+    provider: 'netlify'
+});
