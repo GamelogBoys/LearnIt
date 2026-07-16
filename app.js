@@ -12,6 +12,13 @@ const adminRoute = require('./routes/admin.protected.route');
 const session = require('express-session')
 const flash = require('connect-flash')
 
+app.use((req, res, next) => {
+    if (req.url.startsWith('/.netlify/functions/api')) {
+        req.url = req.url.replace('/.netlify/functions/api', '');
+    }
+    next();
+});
+
 app.use(session({
     secret: process.env.SECRET,
     resave: false,
