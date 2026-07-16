@@ -1,0 +1,14 @@
+[build]
+  command = "echo 'No build command needed'"
+  publish = "public" # Points to your public folder for static css/js/images
+  functions = "netlify/functions"
+
+[functions]
+  external_node_modules = ["express", "ejs", "mongoose", "bcrypt", "jsonwebtoken"]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  force = true
+  from = "/*"
+  status = 200
+  to = "/.netlify/functions/api/:splat"

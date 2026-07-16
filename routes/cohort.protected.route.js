@@ -6,6 +6,48 @@ const userModel = require('../models/user.model')
 const path = require('path');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
+const { GridFsStorage } = require('multer-gridfs-storage');
+const mongoose = require('mongoose')
+
+router.get('/file/:filename', async (req, res) => {
+    try {
+        const db = mongoose.connection.db;
+        
+        // 1. Target the exact GridFS bucket name we uploaded files into ('uploads')
+        const bucket = new mongoose.mongo.GridFSBucket(db, {
+            bucketName: 'uploads'
+        });
+
+        // 2. Locate the file metadata document using the custom filename parameter
+        const files = await bucket.find({ filename: req.params.filename }).toArray();
+        
+        if (!files || files.length === 0) {
+            return res.status(404).json({ error: 'File completely missing from GridFS arrays.' });
+        }
+
+        const file = files[0];
+
+        // 3. Set standard HTTP Streaming headers so browsers know how to process it
+        // Determines if it should be treated as image/png, video/mp4, etc.
+        res.set('Content-Type', file.contentType || 'application/octet-stream');
+        res.set('Accept-Ranges', 'bytes');
+
+        // 4. Open the data download channel stream and pipe it directly out to the server response
+        const downloadStream = bucket.openDownloadStreamByName(req.params.filename);
+        
+        downloadStream.pipe(res);
+
+        // Error boundary safe hook to close broken client pipes cleanly
+        downloadStream.on('error', (err) => {
+            console.error("Stream pipe broke mid-flight:", err.message);
+            res.sendStatus(500);
+        });
+
+    } catch (err) {
+        console.error("GridFS Retrieval Stream Broken:", err.message);
+        res.status(500).json({ error: 'Internal system engine streaming error.' });
+    }
+});
 
 router.get('/', isLoggedIn, async (req, res) => {
     try {
@@ -99,16 +141,25 @@ router.post('/video/:id/like', isLoggedIn, async (req, res) => {
     }
 });
 
-const dpStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './public/images/uploads');
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'dp-' + uniqueSuffix + path.extname(file.originalname));
+const mongoStorage = new GridFsStorage({
+    url: process.env.MONGO_URI, // 👈 Uses your main database connection URL
+    options: { useNewUrlParser: true, useUnifiedTopology: true },
+    file: (req, file) => {
+        return new Promise((resolve, reject) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const filename = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
+            
+            // File configuration structure stored in the database
+            const fileInfo = {
+                filename: filename,
+                bucketName: 'uploads' // 👈 GridFS collection name (will create 'uploads.files' and 'uploads.chunks')
+            };
+            resolve(fileInfo);
+        });
     }
 });
-const uploadDp = multer({ storage: dpStorage });
+    
+const uploadDp = multer({ storage: mongoStorage });
 
 // 1. Render Settings View Layout
 router.get('/settings', isLoggedIn, (req, res) => {

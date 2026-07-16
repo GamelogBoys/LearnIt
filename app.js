@@ -36,3 +36,10 @@ app.use('/admin', adminRoute);
 app.listen(3000, (req, res) => {
     console.log('Server running !')
 })
+
+// Keep your existing app.listen code, but add the export line:
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(3000, () => console.log('Running locally...'));
+}
+
+module.exports = app; // 👈 CRITICAL: This allows Netlify to read your app

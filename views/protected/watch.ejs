@@ -14,7 +14,7 @@
             <a href="/cohort" class="flex items-center gap-2 font-bold text-xl tracking-wider text-blue-600 hover:opacity-80 transition">
                 <span>⬅️</span> Back to Dashboard
             </a>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3" onclick="window.location.href='/cohort/settings'">
                 <span class="text-sm font-medium text-gray-600 hidden sm:inline"><%= user.fullname %></span>
                 <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
                     <%= user.fullname.charAt(0).toUpperCase() %>
@@ -32,10 +32,10 @@
                         class="w-full h-full object-contain" 
                         controls 
                         autoplay
-                        poster="<%= video.thumbnail %>"
+                        poster="/cohort/file/<%= video.thumbnail %>"
                     >
-                        <source src="<%= video.videoPath %>" type="video/mp4">
-                        <source src="<%= video.videoPath %>" type="video/webm">
+                        <source src="/cohort/file/<%= video.videoPath %>" type="video/mp4">
+                        <source src="/cohort/file/<%= video.videoPath %>" type="video/webm">
                         Your browser does not support the video tag code playbacks.
                     </video>
                 </div>
@@ -76,7 +76,7 @@
                         <% suggestions.forEach(track => { %>
                             <a href="/cohort/watch/<%= track._id %>" class="flex gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition group">
                                 <div class="relative w-32 sm:w-40 aspect-video bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="<%= track.thumbnail %>" alt="Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                    <img src="/cohort/file/<%= track.thumbnail %>" alt="Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                                 </div>
                                 <div class="flex flex-col justify-between py-0.5 pr-1">
                                     <div>
